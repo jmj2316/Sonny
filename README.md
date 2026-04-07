@@ -54,6 +54,35 @@ Implementing EMA with a decay rate of 0.9 resulted in:
 
 ---
 
+<hr>
+<h2 align="left">🙏 Acknowledgements</h2>
+
+<p align="left">
+  This project builds upon and leverages the excellent work from the following resources:
+</p>
+
+<ul>
+  <li>
+    <b>Data Processing & Inference:</b> 
+    Inspired by the implementation in 
+    <a href="https://github.com/tung-nd/stormer">
+      <img src="https://img.shields.io/badge/GitHub-Stormer-181717?style=flat-square&logo=github" alt="GitHub Stormer">
+    </a> 
+  </li>
+  <br>
+  <li>
+    <b>Research Paper:</b> 
+    "Scaling transformer neural networks for skillful and reliable medium-range weather forecasting" 
+    <a href="https://arxiv.org/abs/2312.03876">
+      <img src="https://img.shields.io/badge/arXiv-2312.03876-B31B1B?style=flat-square&logo=arxiv&logoColor=white" alt="arXiv Paper">
+    </a>
+  </li>
+</ul>
+
+<blockquote align="left">
+  <i>Special thanks to the authors for their open-source contributions and insightful research.</i>
+</blockquote>
+
 ## 📝 Citation
 If you find this work useful, please cite our paper:
 

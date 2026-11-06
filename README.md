@@ -1,7 +1,9 @@
 <div align="center">
   <h1>Sonny: Breaking the Compute Wall in Medium-Range Weather Forecasting</h1>
-  <p><strong>Minjong Cheon</strong></p>
-  <p><em>Department of Computer Science and Engineering, Sejong University</em></p>
+  <p><strong>Minjong Cheon</strong><sup>1</sup>, <strong>Jung-A Yang</strong><sup>2,*</sup></p>
+  <p><em><sup>1</sup>Department of Computer Science, Korea National Open University</em><br>
+  <em><sup>2</sup>Division of Civil and Environmental Engineering, College of Engineering, Konkuk University</em><br>
+  <sup>*</sup>Corresponding author: ja0903@konkuk.ac.kr</p>
 </div>
 
 ---
@@ -10,9 +12,9 @@
 **Sonny** is an efficient Small Weather Model (SWM) based on the **StepsNet** architecture. While many Large Weather Models (LWMs) require massive TPU/GPU clusters, Sonny is designed to be accessible for academic groups with limited compute budgets.
 
 ### Key Highlights
-* **Low Compute Barrier**: Can be trained to convergence on a **single NVIDIA A40 GPU** in approximately **5.5 days**.
+* **Low Compute Barrier**: Trains on a **single NVIDIA A40 GPU** in **3.5 days** (84 GPU hours, 55 epochs).
 * **High Performance**: Achieves competitive medium-range forecast skill compared to HRES and major AI baselines on **WeatherBench2**.
-* **Enhanced Stability**: Uses **Exponential Moving Average (EMA)** during training to stabilize long-term iterative rollouts without expensive fine-tuning stages.
+* **Enhanced Stability**: Uses an **Exponential Moving Average (EMA)** of the weights and a **five-epoch learning-rate cooldown** to stabilize long-term iterative rollouts without a fine-tuning stage.
 
 ---
 
@@ -32,25 +34,38 @@ Sonny demonstrates significant advantages in training time and resource requirem
 | :--- | :---: | :---: | :---: |
 | GraphCast | 36.7M | 32 x TPUv4 | 4 weeks |
 | Pangu-Weather | 256M | 192 x V100 | 64 days |
-| **Sonny (Ours)** | **20.5M** | **1 x A40** | **5.5 days** |
+| Stormer (ViT-S, same 1.5° grid) | 35.8M | 1 x A40 | 5.6 days |
+| **Sonny (Ours)** | **23.6M** | **1 x A40** | **3.5 days** |
 
-### 2. Impact of EMA
-Implementing EMA with a decay rate of 0.9 resulted in:
-* An average error reduction of **3.34%** across all forecast periods.
-* A peak error reduction of **4.75%** on Day 3.
-* Consistently lower RMSE across nine meteorological variables.
+### 2. Impact of EMA and the Learning-Rate Cooldown
+RMSE on the 355 daily starts of 2022, relative to the raw weights at epoch 50, mean over nine variables and ten lead days:
+* EMA at epoch 50 (decay 0.9), **Sonny (epoch 50)**: **−3.4%**.
+* Five-epoch cooldown with EMA (decay 0.999), **Sonny**: **−4.6%** (−6.6% on day 3, −2.1% on day 10).
 
 ### 3. Case Studies
-* **Typhoon Nanmadol (2022)**: Track error of ~137.5 km at a 120-hour lead time, comparable to Pangu-Weather and GraphCast.
-* **Winter Storm Elliott (2022)**: Captured rapid intensification despite $1.5^{\circ}$ resolution, with a central pressure error of only 4.9 hPa.
+Forecasts tracked on the 6 h rollout path, with IFS HRES on the same 1.5° grid.
+* **Typhoon Nanmadol (2022)**: Mean track error of 69, 77, 105, 193, and 151 km at 24–120 h against the IBTrACS best track, compared with 82, 137, 169, 285, and 317 km for IFS HRES.
+* **Winter Storm Elliott (2022)**: Mean position error of 439, 395, and 137 km for the starts on 19, 20, and 21 December against the ERA5 track, compared with 306, 313, and 90 km for IFS HRES. From the 19 December start, Sonny gives 977.0 hPa at 120 h, when ERA5 gives 971.3 hPa.
 
 ---
 
 ## ⚙️ Configuration
-* **Data**: WeatherBench2 (ERA5) at $1.5^{\circ}$ spatial resolution.
+* **Data**: WeatherBench2 (ERA5) at $1.5^{\circ}$ spatial resolution, 120 × 240 grid (the south-pole row is dropped).
 * **Vertical Levels**: 13 pressure levels (50hPa to 1000hPa).
 * **Objective**: Randomized dynamics forecasting (predicting $\Delta_{\delta t}$ where $\delta t \in \{6, 12, 24\}$ hours).
 * **Loss**: Pressure-weighted and latitude-weighted MSE.
+
+---
+
+## 📦 Weights and Usage
+Weights, configuration, and normalization constants are at [huggingface.co/Francismj/sonny](https://huggingface.co/Francismj/sonny), where the model card shows how to load them with this code.
+
+| File | Weights |
+| :--- | :--- |
+| `sonny_final.safetensors` | **Sonny**: EMA (decay 0.999) after the cooldown, evaluated in the revised paper |
+| `model.safetensors` | **Sonny (epoch 50)**: EMA (decay 0.9) at epoch 50, the weights of arXiv:2603.21284v1 |
+
+The code needs `torch`, `timm`, `xformers`, and a GPU.
 
 ---
 
